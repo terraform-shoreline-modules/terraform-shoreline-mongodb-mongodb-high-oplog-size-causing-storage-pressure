@@ -1,0 +1,154 @@
+{
+  "name": "high_oplog_size_causing_storage_pressure_in_mongodb",
+  "description": "This incident type refers to a situation where the oplog size in MongoDB has increased significantly and is causing storage pressure. Oplog is the operation log that records all the write operations on a MongoDB instance. When the oplog size becomes too large, it can lead to storage pressure on the system, causing slow performance and even system crashes. It is important to monitor the oplog size and take appropriate actions to avoid this incident type.",
+  "params": [
+    {
+      "name": "COLLECTION_NAME",
+      "value": ""
+    },
+    {
+      "name": "NUMBER_OF_DAYS",
+      "value": ""
+    },
+    {
+      "name": "OPLOG_SIZE_LIMIT_IN_MB",
+      "value": ""
+    },
+    {
+      "name": "DATABASE_NAME",
+      "value": ""
+    },
+    {
+      "name": "MONGODB_CONNECTION_STRING",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## High Oplog Size Causing Storage Pressure in MongoDB\nThis incident type refers to a situation where the oplog size in MongoDB has increased significantly and is causing storage pressure. Oplog is the operation log that records all the write operations on a MongoDB instance. When the oplog size becomes too large, it can lead to storage pressure on the system, causing slow performance and even system crashes. It is important to monitor the oplog size and take appropriate actions to avoid this incident type."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check disk usage"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `df -h`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check MongoDB version"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongod --version`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the size of the collections in the database"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_CONNECTION_STRING} --eval \"db.getCollectionInfos({},{size:true})\"`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the size of the oplog"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_CONNECTION_STRING} --eval \"printjson(db.getReplicationInfo())\"`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the total size of the database"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_CONNECTION_STRING} --eval \"printjson(db.stats())\"`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the indexes on the collections"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_CONNECTION_STRING} --eval \"db.collection.getIndexes()\"`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the active connections in the database"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `mongo ${MONGODB_CONNECTION_STRING} --eval \"db.currentOp(true)\"`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the logs for any errors or warnings"
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail /var/log/mongodb/mongod.log`"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Implement a data retention policy to delete old data from the database and oplog. This can help in reducing the amount of data being stored and free up storage space for new data."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_data_retention_policy($COLLECTION_NAME, $NUMBER_OF_DAYS, $OPLOG_SIZE_LIMIT_IN_MB, $DATABASE_NAME)"
+    }
+  ]
+}
